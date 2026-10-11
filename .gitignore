@@ -1,0 +1,7 @@
+data/review.db
+data/*.db
+__pycache__/
+.env
+.token
+logs/
+.claude/

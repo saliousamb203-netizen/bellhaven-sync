@@ -1,0 +1,3 @@
+# Alternative to GitHub Actions: run daily at 6:00 AM on the box that hosts the review app.
+# flock prevents overlapping runs; the review DB lives next to the app so re-runs are idempotent.
+0 6 * * * cd /opt/bellhaven-sync && CRM_TOKEN=$(cat /opt/bellhaven-sync/.token) /usr/bin/flock -n /tmp/bellhaven.lock python3 run_pipeline.py >> logs/sync.log 2>&1

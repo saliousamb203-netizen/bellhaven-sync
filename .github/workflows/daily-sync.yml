@@ -1,0 +1,28 @@
+# Runs the Bellhaven ownership sync every day at 6:00 AM Eastern (10:00 UTC).
+# It only QUEUES proposals; nothing is written to the CRM until a reviewer
+# approves it in the review app. The review database is kept between runs as
+# an artifact so re-runs never re-propose already-decided items.
+name: bellhaven-daily-sync
+on:
+  schedule:
+    - cron: "0 10 * * *"
+  workflow_dispatch: {}
+concurrency: bellhaven-sync   # never run two syncs at once
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt
+      - name: Restore review database
+        uses: dawidd6/action-download-artifact@v6
+        with: { name: review-db, path: data, if_no_artifact_found: warn }
+      - name: Run pipeline
+        env:
+          CRM_TOKEN: ${{ secrets.CRM_TOKEN }}
+        run: python run_pipeline.py
+      - name: Save review database
+        uses: actions/upload-artifact@v4
+        with: { name: review-db, path: data/review.db, overwrite: true }
